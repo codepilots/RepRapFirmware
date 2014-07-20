@@ -164,6 +164,7 @@ RepRap::RepRap() : active(false), debug(false)
   gCodes = new GCodes(platform, webserver);
   move = new Move(platform, gCodes);
   heat = new Heat(platform, gCodes);
+  panel = new Panelone(platform);
   toolList = NULL;
 }
 
@@ -175,9 +176,11 @@ void RepRap::Init()
   webserver->Init();
   move->Init();
   heat->Init();
+  panel->Init();
   currentTool = NULL;
   active = true;
 
+  //TODO: use this stuff for the panel boot screen, perhaps I can also hook up platform message to echo to the panel?
   platform->Message(HOST_MESSAGE, NAME);
   platform->Message(HOST_MESSAGE, " Version ");
   platform->Message(HOST_MESSAGE, VERSION);
@@ -227,8 +230,10 @@ void RepRap::Exit()
   move->Exit();
   gCodes->Exit();
   webserver->Exit();
+  panel->Exit();
   platform->Message(HOST_MESSAGE, "RepRap class exited.\n");
   platform->Exit();
+
 }
 
 void RepRap::Spin()
@@ -241,6 +246,7 @@ void RepRap::Spin()
   gCodes->Spin();
   move->Spin();
   heat->Spin();
+  panel->Spin();
 
   // Keep track of the loop time
 
@@ -268,6 +274,7 @@ void RepRap::Diagnostics()
   heat->Diagnostics();
   gCodes->Diagnostics();
   webserver->Diagnostics();
+  panel->Diagnostics();
   Timing();
 }
 
@@ -303,6 +310,8 @@ void RepRap::EmergencyStop()
 			platform->Disable(drive);
 		}
 	}
+
+	//TODO: Set the panel with a suitable message!
 
 	platform->Message(BOTH_MESSAGE, "Emergency Stop! Reset the controller to continue.");
 }

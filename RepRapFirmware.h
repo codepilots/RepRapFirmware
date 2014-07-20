@@ -31,6 +31,7 @@ class Move;
 class Heat;
 class Tool;
 class RepRap;
+class Panelone;
 
 // A single instance of the RepRap class contains all the others
 
@@ -58,6 +59,7 @@ extern char scratchString[];
 #include "Heat.h"
 #include "Tool.h"
 #include "Reprap.h"
+#include "PanelOne.h"
 
 
 

@@ -57,6 +57,7 @@ class RepRap
     Webserver* webserver;
     Tool* toolList;
     Tool* currentTool;
+    Panelone* panel;
     bool debug;
     float fastLoop, slowLoop;
     float lastTime;
