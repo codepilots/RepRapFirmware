@@ -71,7 +71,7 @@ class GCodes
 {   
   public:
   
-    GCodes(Platform* p, Webserver* w);
+    GCodes(Platform* p, Webserver* w, Display* d);
     void Spin();														// Called in a tight loop to make this class work
     void Init();														// Set it up
     void Exit();														// Shut it down
@@ -130,9 +130,11 @@ class GCodes
     Platform* platform;							// The RepRap machine
     bool active;								// Live and running?
     Webserver* webserver;						// The webserver class
+    Display* display;						    // The display class
     float dwellTime;							// How long a pause for a dwell (seconds)?
     bool dwellWaiting;							// We are in a dwell
     GCodeBuffer* webGCode;						// The sources...
+    GCodeBuffer* displayGCode;						// ...
     GCodeBuffer* fileGCode;						// ...
     GCodeBuffer* serialGCode;					// ...
     GCodeBuffer* cannedCycleGCode;				// ... of G Codes

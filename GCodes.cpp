@@ -25,12 +25,14 @@ Licence: GPL
 
 #include "RepRapFirmware.h"
 
-GCodes::GCodes(Platform* p, Webserver* w)
+GCodes::GCodes(Platform* p, Webserver* w, Display* d)
 {
   active = false;
   platform = p;
   webserver = w;
+  display = d;
   webGCode = new GCodeBuffer(platform, "web: ");
+  displayGCode = new GCodeBuffer(platform, "display: ");
   fileGCode = new GCodeBuffer(platform, "file: ");
   serialGCode = new GCodeBuffer(platform, "serial: ");
   cannedCycleGCode = new GCodeBuffer(platform, "macro: ");
@@ -45,10 +47,12 @@ void GCodes::Exit()
 void GCodes::Init()
 {
   webGCode->Init();
+  displayGCode->Init();
   fileGCode->Init();
   serialGCode->Init();
   cannedCycleGCode->Init();
   webGCode->SetFinished(true);
+  displayGCode->SetFinished(true);
   fileGCode->SetFinished(true);
   serialGCode->SetFinished(true);
   cannedCycleGCode->SetFinished(true);
@@ -112,11 +116,11 @@ void GCodes::Spin()
   if(!active)
     return;
     
-  // Check each of the sources of G Codes (web, serial, and file) to
+  // Check each of the sources of G Codes (web, display, serial, and file) to
   // see if what they are doing has been done.  If it hasn't, return without
   // looking at anything else.
   //
-  // Note the order establishes a priority: web first, then serial, and file
+  // Note the order establishes a priority: web first, then display, serial, and file
   // last.  If file weren't last, then the others would never get a look in when
   // a file was being printed.
 
@@ -127,6 +131,13 @@ void GCodes::Spin()
     return;
   }
   
+  if(!displayGCode->Finished())
+  {
+    displayGCode->SetFinished(ActOnGcode(displayGCode));
+    platform->ClassReport("GCodes", longWait);
+    return;
+  }
+
   if(!serialGCode->Finished())
   {
     serialGCode->SetFinished(ActOnGcode(serialGCode));
@@ -169,6 +180,31 @@ void GCodes::Spin()
 	  return;
   }
   
+  if(display->GCodeAvailable())
+  {
+	  int8_t i = 0;
+	  do
+	  {
+		  char b = display->ReadGCode();
+		  if(displayGCode->Put(b))
+		  {
+			  // we have a complete gcode
+			  if(displayGCode->WritingFileDirectory() != NULL)
+			  {
+				  WriteGCodeToFile(displayGCode);
+			  }
+			  else
+			  {
+				  displayGCode->SetFinished(ActOnGcode(displayGCode));
+			  }
+			  break;	// stop after receiving a complete gcode in case we haven't finished processing it
+		  }
+		  ++i;
+	  } while ( i < 16 && display->GCodeAvailable());
+	  platform->ClassReport("GCodes", longWait);
+	  return;
+  }
+
   // Now the serial interface.  First check the special case of our
   // uploading the reprap.htm file
 
@@ -2173,6 +2209,17 @@ bool GCodes::ActOnGcode(GCodeBuffer *gb)
     return result;
   }
   
+  // Display configuration
+
+  // TODO: this needs populating.
+  if(gb->Seen('D'))
+  {
+    result = ChangeTool(gb->GetIValue());
+    if(result)
+    	HandleReply(error, gb == serialGCode, reply, 'T', code, resend);
+    return result;
+  }
+
   // An empty buffer jumps to here and gets discarded
 
   if(result)
