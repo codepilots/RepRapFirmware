@@ -130,6 +130,86 @@ void Display::LoadGcodeBuffer(const char* gc, bool convertWeb)
 	}
 }
 
+// Methods to manage menys
+
+bool Display::CreateMenu(int id, int size) {
+	if (id > maxMenuIndex || id < 0) {
+		return true;
+	}
+	else {
+		menus[id] = (Menu){size, MenuItem[size]};
+		for (int i=0;i<size; i++){
+			menus[id].items[i] = (MenuItem){"","",""};
+		}
+		return false;
+	}
+	return true;
+}
+
+bool Display::SetMenuTitle(int id, int loc, const char* title) {
+	if (id > maxMenuIndex || id < 0 || id < menus[id].size ) {
+		return true;
+	}
+	else {
+		menus[id].items[loc].title = title;
+		return false;
+	}
+	return true;
+}
+
+bool Display::SetMenuGetter(int id, int loc, const char* getter) {
+	if (id > maxMenuIndex || id < 0 || id < menus[id].size ) {
+		return true;
+	}
+	else {
+		menus[id].items[loc].getter = getter;
+		return false;
+	}
+	return true;
+}
+
+bool Display::SetMenuSetter(int id, int loc, const char* setter) {
+	if (id > maxMenuIndex || id < 0 || id < menus[id].size ) {
+		return true;
+	}
+	else {
+		menus[id].items[loc].setter = setter;
+		return false;
+	}
+	return true;
+}
+
+//Methods to manage movement
+bool Display::MoveUp(int steps) {
+	return true;
+}
+
+bool Display::MoveDown(int steps) {
+	return true;
+}
+
+bool Display::Click(int steps) {
+	return true;
+}
+
+//Methods to select the display
+bool Display::ShowMenu(int id) {
+	return true;
+}
+
+bool Display::ShowDashboard() {
+	return true;
+}
+
+bool Display::ShowString(const char* title) {
+	return true;
+}
+
+//Methods to initialize the LCD to use.
+bool Display::SelectDisplay(int id) {
+	return true;
+}
+
 // Process a null-terminated gcode
 // We intercept four G/M Codes so we can deal with file manipulation and emergencies.  That
 // way things don't get out of sync, and - as a file name can contain
@@ -493,6 +573,10 @@ void Display::Init()
   active = true;
   seq = 0;
   webDebug = false;
+
+  for (int i=0; i<=maxMenuIndex; i++){
+	  menus[i] = (Menu){0, MenuItem[0]};
+  }
 }
 
 

@@ -2214,9 +2214,28 @@ bool GCodes::ActOnGcode(GCodeBuffer *gb)
   // TODO: this needs populating.
   if(gb->Seen('D'))
   {
-    result = ChangeTool(gb->GetIValue());
+	  code = gb->GetIValue();
+	  switch(code)
+	  {
+	  case 0:
+	  case 1: // Create menu
+		  result = display->CreateMenu(gb->GetIValue(),gb->GetIValue()); //menu id, menu size
+		  break;
+	  case 20: // Set menu item name
+		  result = display->SetMenuTitle(gb->GetIValue(),gb->GetIValue(),gb->GetString()); //menu id, menu location, item title
+		  break;
+	  case 21: // Set menu item GCode Set
+		  result = display->SetMenuSetter(gb->GetIValue(),gb->GetIValue(),gb->GetString()); //menu id, menu location, item title
+		  break;
+	  case 22: // set menu item GCode Read
+		  result = display->SetMenuGetter(gb->GetIValue(),gb->GetIValue(),gb->GetString()); //menu id, menu location, item title
+		  break;
+	  default:
+		  result = true;
+	      snprintf(reply, STRING_LENGTH, "invalid D Code: %s", gb->Buffer());
+	  }
     if(result)
-    	HandleReply(error, gb == serialGCode, reply, 'T', code, resend);
+    	HandleReply(error, gb == serialGCode, reply, 'D', code, resend);
     return result;
   }
 
